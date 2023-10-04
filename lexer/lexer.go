@@ -35,9 +35,35 @@ func (lex *Lexer) NextToken() token.Token {
 
 	switch lex.char {
 	case '=':
-		tok = newToken(token.ASSIGN, lex.char)
+		if lex.peekChar() == '=' {
+			char := lex.char
+			lex.readChar()
+			literal := string(char) + string(lex.char)
+			tok = token.Token{ Type: token.EQ, Literal: literal }
+		} else {
+			tok = newToken(token.ASSIGN, lex.char)
+		}
 	case '+':
 		tok = newToken(token.PLUS, lex.char)
+	case '-':
+		tok = newToken(token.MINUS, lex.char)
+	case '*':
+		tok = newToken(token.ASTERISK, lex.char)
+	case '/':
+		tok = newToken(token.SLASH, lex.char)
+	case '!':
+		if lex.peekChar() == '=' {
+			char := lex.char
+			lex.readChar()
+			literal := string(char) + string(lex.char)
+			tok = token.Token{ Type: token.NOT_EQ, Literal: literal }
+		} else {
+			tok = newToken(token.BANG, lex.char)
+		}
+	case '<':
+		tok = newToken(token.LT, lex.char)
+	case '>':
+		tok = newToken(token.GT, lex.char)
 	case ';':
 		tok = newToken(token.SEMICOLON, lex.char)
 	case ',':
@@ -99,6 +125,14 @@ func (lex *Lexer) readNumber() string {
 		lex.readChar()
 	}
 	return lex.input[position:lex.position]
+}
+
+func (lex *Lexer) peekChar() byte {
+	if (lex.readPosition >= len(lex.input)) {
+		return 0
+	} else {
+		return lex.input[lex.readPosition]
+	}
 }
 
 func isLetter(char byte) bool {
