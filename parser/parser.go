@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/agp745/Interpreter-Go/ast"
 	"github.com/agp745/Interpreter-Go/lexer"
 	"github.com/agp745/Interpreter-Go/token"
@@ -11,16 +13,29 @@ type Parser struct {
 
 	currToken token.Token
 	peekToken token.Token
+  errors []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{lex: l}
+	p := &Parser{
+    lex: l,
+    errors: []string{},
+  }
 
 	// read 2 tokens so that currToken and peekToken are set
 	p.nextToken()
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) Errors() []string {
+  return p.errors
+}
+
+func (p *Parser) peekError(t token.TokenType) {
+  msg := fmt.Sprintf("Expected next token to be %s, got %s instead", t, p.peekToken.Type)
+  p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) nextToken() {
@@ -66,7 +81,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 
 	// TODO: We're skipping the expressions until we encounter a semicolon
-	for p.currTokenIs(token.SEMICOLON) {
+	for !p.currTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
@@ -86,6 +101,8 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+    p.peekError(t)
 		return false
 	}
 }
+
